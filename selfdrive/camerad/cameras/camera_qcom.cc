@@ -360,6 +360,12 @@ static void set_exposure(CameraState *s, float exposure_frac, float gain_frac) {
 
 static void do_autoexposure(CameraState *s, float grey_frac) {
   const float target_grey = 0.3;
+
+  s->frame_info_lock.lock();
+  s->measured_grey_fraction = grey_frac;
+  s->target_grey_fraction = target_grey;
+  s->frame_info_lock.unlock();
+
   if (s->apply_exposure == ov8865_apply_exposure) {
     // gain limits downstream
     const float gain_frac_min = 0.015625;
@@ -1353,7 +1359,7 @@ void cameras_open(MultiCameraState *s) {
       // driver camera
       {.vfe_intf = VFE1, .intftype = RDI0, .num_cids = 1, .cids[0] = CID0, .csid = CSID2},
       // road camera (focus)
-      {.vfe_intf = VFE0, .intftype = RDI1, .num_cids = CID1, .cids[0] = CID1, .csid = CSID0},
+      {.vfe_intf = VFE0, .intftype = RDI1, .num_cids = 1, .cids[0] = CID1, .csid = CSID0},
       // road camera (stats, for AE)
       {.vfe_intf = VFE0, .intftype = RDI2, .num_cids = 1, .cids[0] = CID2, .csid = CSID0},
     },
@@ -1616,6 +1622,7 @@ void cameras_run(MultiCameraState *s) {
             .gain = c->cur_gain_frac,
             .measured_grey_fraction = c->measured_grey_fraction,
             .target_grey_fraction = c->target_grey_fraction,
+            .high_conversion_gain = false,
         };
         c->frame_metadata_idx = (c->frame_metadata_idx + 1) % METADATA_BUF_COUNT;
 
