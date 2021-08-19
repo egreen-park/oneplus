@@ -39,8 +39,14 @@ def set_realtime_priority(level: int) -> None:
 
 def set_core_affinity(core: int) -> None:
   if not PC:
-    os.sched_setaffinity(0, [core,])
-
+    try :
+      os.sched_setaffinity(0,[core,])
+    except :
+      if core == 3:
+        os.sched_setaffinity(0,[1,])
+      else :
+        os.sched_staffinity(0, [0,])
+#    os.sched_setaffinity(0, [core,])
 
 def config_realtime_process(core: int, priority: int) -> None:
   gc.disable()
