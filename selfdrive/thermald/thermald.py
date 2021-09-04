@@ -163,9 +163,9 @@ def thermald_thread():
 
   fan_speed = 0
   count = 0
-
+################## "ignition": False,############
   startup_conditions = {
-    "ignition": False,
+    "ignition": True,
   }
   startup_conditions_prev = startup_conditions.copy()
 
