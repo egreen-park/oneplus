@@ -584,7 +584,7 @@ int main() {
       threads.push_back(std::thread(can_send_thread, getenv("FAKESEND") != nullptr));
       threads.push_back(std::thread(can_recv_thread));
       threads.push_back(std::thread(hardware_control_thread));
-      threads.push_back(std::thread(pigeon_thread));
+      // 화판수정 threads.push_back(std::thread(pigeon_thread));
     }
 
     for (auto &t : threads) t.join();
