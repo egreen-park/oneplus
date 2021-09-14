@@ -582,7 +582,7 @@ int main() {
       threads.emplace_back(can_send_thread, panda, getenv("FAKESEND") != nullptr);
       threads.emplace_back(can_recv_thread, panda);
       threads.emplace_back(hardware_control_thread, panda);
-      threads.emplace_back(pigeon_thread, panda);
+      //threads.emplace_back(pigeon_thread, panda);
     }
 
     for (auto &t : threads) t.join();
