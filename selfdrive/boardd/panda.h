@@ -49,10 +49,11 @@ class Panda {
   void cleanup();
 
  public:
-  Panda(std::string serial="");
+  //Panda(std::string serial="");
+  Panda();
   ~Panda();
 
-  std::string usb_serial;
+  //std::string usb_serial;
   std::atomic<bool> connected = true;
   std::atomic<bool> comms_healthy = true;
   cereal::PandaState::PandaType hw_type = cereal::PandaState::PandaType::UNKNOWN;
@@ -60,7 +61,7 @@ class Panda {
   bool has_rtc = false;
 
   // Static functions
-  static std::vector<std::string> list();
+  //static std::vector<std::string> list();
 
   // HW communication
   int usb_write(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, unsigned int timeout=TIMEOUT);
