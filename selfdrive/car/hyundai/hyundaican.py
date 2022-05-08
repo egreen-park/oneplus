@@ -11,7 +11,8 @@ def create_lkas11(packer, frame, car_fingerprint, apply_steer, steer_req,
                   left_lane, right_lane,
                   left_lane_depart, right_lane_depart, bus, ldws_opt, cut_steer_temp):
   values = copy.copy(lkas11)
-  values["CF_Lkas_LdwsSysState"] = sys_state
+  #values["CF_Lkas_LdwsSysState"] = sys_state
+  values["CF_Lkas_LdwsSysState"] = 3 if enabled else sys_state ### K7 LDWS
   values["CF_Lkas_SysWarning"] = 3 if sys_warning else 0
   values["CF_Lkas_LdwsLHWarning"] = left_lane_depart
   values["CF_Lkas_LdwsRHWarning"] = right_lane_depart
@@ -45,6 +46,10 @@ def create_lkas11(packer, frame, car_fingerprint, apply_steer, steer_req,
     values["CF_Lkas_LdwsActivemode"] = 2
     values["CF_Lkas_SysWarning"] = lkas11["CF_Lkas_SysWarning"]
 
+  elif car_fingerprint == CAR.K7: ######## K7 LDWS #######
+    values["CF_Lkas_LdwsActivemode"] = 2
+    values["CF_Lkas_FcwOpt_USM"] = 1
+    
   elif car_fingerprint == CAR.SONATA_LF_TURBO:
     values["CF_Lkas_LdwsOpt_USM"] = 2
     values["CF_Lkas_FcwOpt_USM"] = 2 if enabled else 1

@@ -626,7 +626,7 @@ void NvgWindow::drawMaxSpeed(QPainter &p) {
   float cruiseMaxSpeed = scc_smoother.getCruiseMaxSpeed();
   bool is_cruise_set = (cruiseMaxSpeed > 0 && cruiseMaxSpeed < 255);
 
-  QRect rc(30, 30, 184, 202);
+  QRect rc(250, 530, 184, 202); // 30 30 change
   p.setPen(QPen(QColor(0xff, 0xff, 0xff, 100), 10));
   p.setBrush(QColor(0, 0, 0, 100));
   p.drawRoundedRect(rc, 20, 20);
@@ -640,7 +640,7 @@ void NvgWindow::drawMaxSpeed(QPainter &p) {
         snprintf(str, sizeof(str), "%d", (int)(applyMaxSpeed*KM_TO_MILE + 0.5));
 
     configFont(p, "Open Sans", 45, "Bold");
-    drawText(p, rc.center().x(), 100, str, 255);
+    drawText(p, rc.center().x(), 100 + 500, str, 255);  // SCC Set
 
     if (is_metric)
         snprintf(str, sizeof(str), "%d", (int)(cruiseMaxSpeed + 0.5));
@@ -648,19 +648,19 @@ void NvgWindow::drawMaxSpeed(QPainter &p) {
         snprintf(str, sizeof(str), "%d", (int)(cruiseMaxSpeed*KM_TO_MILE + 0.5));
 
     configFont(p, "Open Sans", 76, "Bold");
-    drawText(p, rc.center().x(), 195, str, 255);
+    drawText(p, rc.center().x(), 195 + 500, str, 255);
   } else {
     if(long_control) {
       configFont(p, "Open Sans", 48, "sans-semibold");
-      drawText(p, rc.center().x(), 100, "OP", 100);
+      drawText(p, rc.center().x(), 100 + 500, "OP", 100);
     }
     else {
       configFont(p, "Open Sans", 48, "sans-semibold");
-      drawText(p, rc.center().x(), 100, "MAX", 100);
+      drawText(p, rc.center().x(), 100 + 500, "MAX", 100);
     }
 
     configFont(p, "Open Sans", 76, "sans-semibold");
-    drawText(p, rc.center().x(), 195, "N/A", 100);
+    drawText(p, rc.center().x(), 195 + 500, "N/A", 100);
   }
 }
 
@@ -688,11 +688,11 @@ void NvgWindow::drawSpeed(QPainter &p) {
 
   QString speed;
   speed.sprintf("%.0f", cur_speed);
-  configFont(p, "Open Sans", 176, "Bold");
-  drawTextWithColor(p, rect().center().x(), 230, speed, color);
+  configFont(p, "Open Sans", 200, "Bold");
+  drawTextWithColor(p, rect().center().x(), 230 + 540, speed, color);
 
-  configFont(p, "Open Sans", 66, "Regular");
-  drawText(p, rect().center().x(), 310, s->scene.is_metric ? "km/h" : "mph", 200);
+ // configFont(p, "Open Sans", 66, "Regular");
+ // drawText(p, rect().center().x(), 310, s->scene.is_metric ? "km/h" : "mph", 200);
 }
 
 void NvgWindow::drawSpeedLimit(QPainter &p) {
@@ -723,8 +723,8 @@ void NvgWindow::drawSpeedLimit(QPainter &p) {
   {
       int w = 120;
       int h = 54;
-      int x = (width() + (bdr_s*2))/2 - w/2 - bdr_s;
-      int y = 40 - bdr_s;
+      int x = (width() + (bdr_s*2))/2 - w/2 - bdr_s - 596; //NDA 
+      int y = 40 - bdr_s + 430;  //NDA 
 
       p.setOpacity(1.f);
       p.drawPixmap(x, y, w, h, activeNDA == 1 ? ic_nda : ic_hda);
@@ -734,8 +734,8 @@ void NvgWindow::drawSpeedLimit(QPainter &p) {
   {
     int radius_ = 192;
 
-    int x = 30;
-    int y = 270;
+    int x = 30; 
+    int y = 530; // 270 + 200; // 
 
     p.setPen(Qt::NoPen);
     p.setBrush(QBrush(QColor(255, 0, 0, 255)));
@@ -777,7 +777,7 @@ void NvgWindow::drawSpeedLimit(QPainter &p) {
       int radius_ = 192;
 
       int x = 30;
-      int y = 270;
+      int y = 530; //270 + 200; // 
 
       p.setPen(Qt::NoPen);
 

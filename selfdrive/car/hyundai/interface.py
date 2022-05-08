@@ -42,8 +42,11 @@ class CarInterface(CarInterfaceBase):
     tire_stiffness_factor = 1.
     ret.maxSteeringAngleDeg = 1000.
 
-    ret.steerFaultMaxAngle = 85
-    ret.steerFaultMaxFrames = 90
+    #ret.steerFaultMaxAngle = 85
+    #ret.steerFaultMaxFrames = 90
+    ret.steerFaultMaxAngle = 75 #85X-90x90x95x80x75
+    ret.steerFaultMaxFrames = 90 #90X-95x90x95x90x90
+
 
     ret.disableLateralLiveTuning = False
 
@@ -296,7 +299,7 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.8
     elif candidate in [CAR.K7, CAR.K7_HEV]:
       tire_stiffness_factor = 0.7
-      ret.mass = 1650. + STD_CARGO_KG
+      ret.mass = 1685. + STD_CARGO_KG
       ret.wheelbase = 2.855
       ret.centerToFront = ret.wheelbase * 0.4
       ret.steerRatio = 17.25
