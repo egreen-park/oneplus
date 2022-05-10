@@ -12,7 +12,7 @@ import psutil
 
 import cereal.messaging as messaging
 from cereal import log
-from common.dict_helpers import strip_deprecated_keys
+#from common.dict_helpers import strip_deprecated_keys
 from common.filter_simple import FirstOrderFilter
 from common.params import Params
 from common.realtime import DT_TRML, sec_since_boot
@@ -75,6 +75,7 @@ def read_tz(x):
   except FileNotFoundError:
     return 0
 
+prebuiltfile = '/data/openpilot/prebuilt'
 
 def read_thermal(thermal_config):
   dat = messaging.new_message('deviceState')
@@ -184,7 +185,7 @@ def thermald_thread(end_event, hw_queue):
     network_info=None,
     nvme_temps=[],
     modem_temps=[],
-    wifi_address='N/A',
+    wifi_address='────────',
   )
 
   current_filter = FirstOrderFilter(0., CURRENT_TAU, DT_TRML)
@@ -274,6 +275,7 @@ def thermald_thread(end_event, hw_queue):
 
     msg.deviceState.screenBrightnessPercent = HARDWARE.get_screen_brightness()
     msg.deviceState.batteryPercent = HARDWARE.get_battery_capacity()
+    msg.deviceState.batteryStatus = HARDWARE.get_battery_status()
     msg.deviceState.batteryCurrent = HARDWARE.get_battery_current()
     msg.deviceState.usbOnline = HARDWARE.get_usb_present()
     current_filter.update(msg.deviceState.batteryCurrent / 1e6)
@@ -303,7 +305,7 @@ def thermald_thread(end_event, hw_queue):
     # Ensure date/time are valid
     now = datetime.datetime.utcnow()
     startup_conditions["time_valid"] = True #(now.year > 2020) or (now.year == 2020 and now.month >= 10)
-    set_offroad_alert_if_changed("Offroad_InvalidTime", (not startup_conditions["time_valid"]))
+    #set_offroad_alert_if_changed("Offroad_InvalidTime", (not startup_conditions["time_valid"]))
 
     startup_conditions["up_to_date"] = True #params.get("Offroad_ConnectivityNeeded") is None or params.get_bool("DisableUpdates") or params.get_bool("SnoozeUpdate")
     startup_conditions["not_uninstalling"] = not params.get_bool("DoUninstall")
@@ -374,6 +376,11 @@ def thermald_thread(end_event, hw_queue):
       if off_ts is None:
         off_ts = sec_since_boot()
 
+    prebuiltlet = params.get_bool("PutPrebuilt")
+    if not os.path.isfile(prebuiltfile) and prebuiltlet:
+      os.system("cd /data/openpilot; touch prebuilt")
+    elif os.path.isfile(prebuiltfile) and not prebuiltlet:
+      os.system("cd /data/openpilot; rm -f prebuilt")
     # Offroad power monitoring
     power_monitor.calculate(peripheralState, onroad_conditions["ignition"])
     msg.deviceState.offroadPowerUsageUwh = power_monitor.get_power_used()
@@ -386,7 +393,7 @@ def thermald_thread(end_event, hw_queue):
       msg.deviceState.powerDrawW = 0
 
     # Check if we need to disable charging (handled by boardd)
-    msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(onroad_conditions["ignition"], in_car, off_ts)
+    #msg.deviceState.chargingDisabled = power_monitor.should_disable_charging(onroad_conditions["ignition"], in_car, off_ts)
 
     # Check if we need to shut down
     if power_monitor.should_shutdown(peripheralState, onroad_conditions["ignition"], in_car, off_ts, started_seen):
@@ -432,16 +439,16 @@ def thermald_thread(end_event, hw_queue):
     statlog.gauge("screen_brightness_percent", msg.deviceState.screenBrightnessPercent)
 
     # report to server once every 10 minutes
-    if (count % int(600. / DT_TRML)) == 0:
-      if EON and started_ts is None and msg.deviceState.memoryUsagePercent > 40:
-        cloudlog.event("High offroad memory usage", mem=msg.deviceState.memoryUsagePercent)
+    #if (count % int(600. / DT_TRML)) == 0:
+    #  if EON and started_ts is None and msg.deviceState.memoryUsagePercent > 40:
+    #    cloudlog.event("High offroad memory usage", mem=msg.deviceState.memoryUsagePercent)
 
-      cloudlog.event("STATUS_PACKET",
-                     count=count,
-                     pandaStates=[strip_deprecated_keys(p.to_dict()) for p in pandaStates],
-                     peripheralState=strip_deprecated_keys(peripheralState.to_dict()),
-                     location=(strip_deprecated_keys(sm["gpsLocationExternal"].to_dict()) if sm.alive["gpsLocationExternal"] else None),
-                     deviceState=strip_deprecated_keys(msg.to_dict()))
+    #  cloudlog.event("STATUS_PACKET",
+    #                 count=count,
+    #                 pandaStates=[strip_deprecated_keys(p.to_dict()) for p in pandaStates],
+    #                 peripheralState=strip_deprecated_keys(peripheralState.to_dict()),
+    #                 location=(strip_deprecated_keys(sm["gpsLocationExternal"].to_dict()) if sm.alive["gpsLocationExternal"] else None),
+    #                 deviceState=strip_deprecated_keys(msg.to_dict()))
 
     count += 1
 
