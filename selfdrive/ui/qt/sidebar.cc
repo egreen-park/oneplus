@@ -82,6 +82,7 @@ void Sidebar::updateState(const UIState &s) {
     pandaStatus = {"GPS\nSEARCH", warning_color};
   }*/
   setProperty("pandaStatus", QVariant::fromValue(pandaStatus));
+
 }
 
 void Sidebar::paintEvent(QPaintEvent *event) {
@@ -108,16 +109,6 @@ void Sidebar::paintEvent(QPaintEvent *event) {
   }
 #endif
 
-#ifdef QCOM
-  // battery status
-  p.drawImage(68, 180, battery_imgs[m_battery_img]); // signal_imgs to battery_imgs
-  configFont(p, "Open Sans", 32, "Bold");
-  p.setPen(QColor(0x00, 0x00, 0x00));
-  const QRect r = QRect(80, 193, 100, 50);
-  char battery_str[5];
-  snprintf(battery_str, sizeof(battery_str), "%d%%", m_batteryPercent);
-  p.drawText(r, Qt::AlignCenter, battery_str);
-#endif
 
 
   configFont(p, "Open Sans", 30, "Regular");
