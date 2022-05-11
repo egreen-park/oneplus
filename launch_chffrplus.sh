@@ -10,6 +10,18 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 function two_init {
 
+  mount -o remount,rw /system
+
+  if [ ! -f /ONEPLUS ] && ! $(grep -q "letv" /proc/cmdline); then
+    sed -i -e 's#/dev/input/event1#/dev/input/event2#g' ~/.bash_profile
+    touch /ONEPLUS
+  else
+    if [ ! -f /LEECO ]; then
+      touch /LEECO
+    fi
+  fi
+  mount -o remount,r /system  
+
   # set IO scheduler
   setprop sys.io.scheduler noop
   for f in /sys/block/*/queue/scheduler; do
@@ -42,16 +54,16 @@ function two_init {
   # *** set up governors ***
 
   # +50mW offroad, +500mW onroad for 30% more RAM bandwidth
-  echo "performance" > /sys/class/devfreq/soc:qcom,cpubw/governor
+#  echo "performance" > /sys/class/devfreq/soc:qcom,cpubw/governor
   echo 1056000 > /sys/class/devfreq/soc:qcom,m4m/max_freq
-  echo "performance" > /sys/class/devfreq/soc:qcom,m4m/governor
+  #echo "performance" > /sys/class/devfreq/soc:qcom,m4m/governor
 
   # unclear if these help, but they don't seem to hurt
-  echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu0/governor
-  echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu2/governor
+  #echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu0/governor
+  #echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu2/governor
 
   # GPU
-  echo "performance" > /sys/class/devfreq/b00000.qcom,kgsl-3d0/governor
+  #echo "performance" > /sys/class/devfreq/b00000.qcom,kgsl-3d0/governor
 
   # /sys/class/devfreq/soc:qcom,mincpubw is the only one left at "powersave"
   # it seems to gain nothing but a wasted 500mW
@@ -68,7 +80,8 @@ function two_init {
   [ -d "/proc/irq/733" ] && echo 3 > /proc/irq/733/smp_affinity_list
 
   # GPU and camera get cpu 2
-  CAM_IRQS="177 178 179 180 181 182 183 184 185 186 192"
+  #CAM_IRQS="177 178 179 180 181 182 183 184 185 186 192"
+  CAM_IRQS="177 178 179 180 181 182 183 192"
   for irq in $CAM_IRQS; do
     echo 2 > /proc/irq/$irq/smp_affinity_list
   done
@@ -80,7 +93,7 @@ function two_init {
   done
 
   # the flippening!
-  LD_LIBRARY_PATH="" content insert --uri content://settings/system --bind name:s:user_rotation --bind value:i:1
+  #LD_LIBRARY_PATH="" content insert --uri content://settings/system --bind name:s:user_rotation --bind value:i:1
 
   # disable bluetooth
   service call bluetooth_manager 8
@@ -89,36 +102,25 @@ function two_init {
   wpa_cli IFNAME=wlan0 SCAN
 
   # Check for NEOS update
-  if [ $(< /VERSION) != "$REQUIRED_NEOS_VERSION" ]; then
-    echo "Installing NEOS update"
-    NEOS_PY="$DIR/selfdrive/hardware/eon/neos.py"
-    MANIFEST="$DIR/selfdrive/hardware/eon/neos.json"
-    $NEOS_PY --swap-if-ready $MANIFEST
-    $DIR/selfdrive/hardware/eon/updater $NEOS_PY $MANIFEST
-  fi
-}
+  #if [ $(< /VERSION) != "$REQUIRED_NEOS_VERSION" ]; then
+  #  echo "Installing NEOS update"
+  #  NEOS_PY="$DIR/selfdrive/hardware/eon/neos.py"
+  #  MANIFEST="$DIR/selfdrive/hardware/eon/neos.json"
+  #  $NEOS_PY --swap-if-ready $MANIFEST
+  #  $DIR/selfdrive/hardware/eon/updater $NEOS_PY $MANIFEST
+  #fi
 
-function tici_init {
-  # wait longer for weston to come up
-  if [ -f "$BASEDIR/prebuilt" ]; then
-    sleep 3
-  fi
-
-  # TODO: move this to agnos
-  sudo rm -f /data/etc/NetworkManager/system-connections/*.nmmeta
-
-  # set success flag for current boot slot
-  sudo abctl --set_success
-
-  # Check if AGNOS update is required
-  if [ $(< /VERSION) != "$AGNOS_VERSION" ]; then
-    AGNOS_PY="$DIR/selfdrive/hardware/tici/agnos.py"
-    MANIFEST="$DIR/selfdrive/hardware/tici/agnos.json"
-    if $AGNOS_PY --verify $MANIFEST; then
-      sudo reboot
-    fi
-    $DIR/selfdrive/hardware/tici/updater $AGNOS_PY $MANIFEST
-  fi
+  # One-time fix for a subset of OP3T with gyro orientation offsets.
+  # Remove and regenerate qcom sensor registry. Only done on OP3T mainboards.
+  # Performed exactly once. The old registry is preserved just-in-case, and
+  # doubles as a flag denoting we've already done the reset.
+  if [ -f /ONEPLUS ] && [ ! -f "/persist/comma/op3t-sns-reg-backup" ]; then
+    echo "Performing OP3T sensor registry reset"
+    mv /persist/sensors/sns.reg /persist/comma/op3t-sns-reg-backup &&
+      rm -f /persist/sensors/sensors_settings /persist/sensors/error_log /persist/sensors/gyro_sensitity_cal &&
+      echo "restart" > /sys/kernel/debug/msm_subsys/slpi &&
+      sleep 5  # Give Android sensor subsystem a moment to recover
+  fi  
 }
 
 function launch {
@@ -167,12 +169,7 @@ function launch {
   ln -sfn $(pwd) /data/pythonpath
   export PYTHONPATH="$PWD:$PWD/pyextra"
 
-  # hardware specific init
-  if [ -f /EON ]; then
-    two_init
-  elif [ -f /TICI ]; then
-    tici_init
-  fi
+  two_init
 
   # write tmux scrollback to a file
   tmux capture-pane -pq -S-1000 > /tmp/launch_log
@@ -185,6 +182,7 @@ function launch {
 
   # if broken, keep on screen error
   while true; do sleep 1; done
+
 }
 
 launch
